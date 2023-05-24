@@ -1,0 +1,8 @@
+*
+!*.cpp
+!*.g4
+!Makefile
+!examples
+!examples/*.txt
+!.gitignore
+!README.md
