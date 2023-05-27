@@ -1,16 +1,17 @@
 grammar calc;
 
 /* Production Rules */
-stmt: expr NEWLINE                      # ExprStmt
-    | NEWLINE                           # EmptyStmt
+stmt: expr NEWLINE                          # ExprStmt
+    | NEWLINE                               # EmptyStmt
     ;
 
-expr: <assoc=right> expr CARET expr     # Exponentiation
-    | expr op=(ASTERISK|FWDSLASH) expr  # MultiplyOrDivide
-    | expr op=(PLUS|MINUS) expr         # PlusOrMinus
-    | op=(PLUS|MINUS) expr              # NegationOrUnaryPlus
-    | LPAREN expr RPAREN                # Parens
-    | NUMBER                            # Number
+expr: NUMBER                                # Number
+    | LPAREN expr RPAREN                    # Parens
+    | <assoc=right> expr CARET expr         # Exponentiation
+    | <assoc=right> op=(PLUS|MINUS) expr    # NegationOrUnaryPlus
+    | expr LPAREN expr RPAREN               # ImplicitMultiplication
+    | expr op=(ASTERISK|FWDSLASH) expr      # MultiplyOrDivide
+    | expr op=(PLUS|MINUS) expr             # PlusOrMinus
     ;
 
 /* Tokens */
@@ -22,5 +23,5 @@ MINUS:      '-';
 ASTERISK:   '*';
 FWDSLASH:   '/';
 NUMBER:     [0-9]+;
-NEWLINE:    [\r\n];
+NEWLINE:    '\r'? '\n'+;
 WHITESPACE: [ \t]+ -> skip;

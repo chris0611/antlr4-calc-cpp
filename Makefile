@@ -1,6 +1,7 @@
 CXX := g++
 
-INC_DIRS := -I/usr/include/antlr4-runtime -Igenerated
+ANTLR4_DIR := /usr/local
+INC_DIRS := -I$(ANTLR4_DIR)/include/antlr4-runtime -Igenerated
 CXXFLAGS := -std=c++17 -O2 -march=native $(INC_DIRS) -Wall -Wpedantic -Wno-attributes
 
 TARGET_EXEC := main	# name of final executable
@@ -14,7 +15,7 @@ GEN_HDRS := $(GEN_DIR)/calcBaseListener.h $(GEN_DIR)/calcLexer.h $(GEN_DIR)/calc
 all: $(B_DIR)/$(TARGET_EXEC)
 
 $(B_DIR)/$(TARGET_EXEC): $(B_DIR)/main.o $(GEN_OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ -lantlr4-runtime
+	$(CXX) $(CXXFLAGS) -o $@ $^ -L$(ANTLR4_DIR)/lib -lantlr4-runtime -Wl,-rpath=$(ANTLR4_DIR)/lib
 
 $(B_DIR)/main.o: $(GEN_HDRS)
 

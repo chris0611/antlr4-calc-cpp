@@ -6,3 +6,4 @@
 !examples/*.txt
 !.gitignore
 !README.md
+!test.sh

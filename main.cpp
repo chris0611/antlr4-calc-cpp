@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <stack>
 #include <memory>
 #include <cmath>
@@ -63,7 +64,16 @@ public:
         stack->pop();
         double result = std::pow(base, exp);
         stack->push(result); 
-    } 
+    }
+
+    void exitImplicitMultiplication(calcParser::ImplicitMultiplicationContext *ctx) override {
+        double rhs = stack->top();
+        stack->pop();
+        double lhs = stack->top();
+        stack->pop();
+        double res = rhs * lhs;
+        stack->push(res);
+    }
 
     double getResult() {
         return stack->top();
@@ -73,23 +83,32 @@ private:
     std::unique_ptr<std::stack<double>> stack;
 };
 
+
 int main(int argc, const char *argv[])
 {
-    std::ifstream stream;
-    stream.open(argv[1]);   
+    ANTLRInputStream input;
 
-    ANTLRInputStream input(stream);
+    if (argc != 2) {
+        ANTLRInputStream stdin_input(std::cin);
+        input = stdin_input;
+    } else {
+        std::ifstream stream;
+        stream.open(argv[1]);
+        ANTLRInputStream file_input(stream);
+        input = file_input;
+    }
+
     calcLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
     calcParser parser(&tokens);
 
-    tree::ParseTree *tree = parser.statement();
+    tree::ParseTree *tree = parser.stmt();
     TreeShapeListener listener;
     tree::ParseTreeWalker::DEFAULT.walk(&listener, tree);
 
     double result = listener.getResult();
 
-    std::cout << "Result: " << result << '\n';
+    std::cout << result << '\n';
 
     return 0;
 }
