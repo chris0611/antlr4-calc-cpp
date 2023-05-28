@@ -28,5 +28,6 @@ assert 4    '(4 / 2)(8 / 4)'
 assert -8   '-2(4)'
 assert 9    'sqrt(81)'
 assert 1    'sin(3.14159/2)'
+assert 5    'hypot(3, 4)'
 
 echo OK

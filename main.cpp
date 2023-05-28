@@ -1,11 +1,13 @@
 #include <iostream>
 #include <unordered_map>
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <stack>
 #include <memory>
 #include <cmath>
 
+#include "antlr4-runtime.h"
 #include "calcLexer.h"
 #include "calcParser.h"
 #include "calcBaseListener.h"
@@ -13,24 +15,26 @@
 using namespace antlr4;
 
 enum class Funcs {
-    SIN, COS, TAN, SQRT
+    SIN, COS, TAN, SQRT, HYPOT
 };
 
 class EvalListener : public calcBaseListener {
 public:
     EvalListener() {
-        stack = std::stack<double>();
-        results = std::vector<double>();
+        stack = {};
+        results = {};
+        memory = {};
         functions = {
             {"sin", Funcs::SIN},
             {"cos", Funcs::COS},
             {"tan", Funcs::TAN},
-            {"sqrt", Funcs::SQRT}
+            {"sqrt", Funcs::SQRT},
+            {"hypot", Funcs::HYPOT}
         };
     }
 
     void exitNumber(calcParser::NumberContext *ctx) override {
-        double num = std::stod(ctx->NUMBER()->toString());
+        double num = std::stod(ctx->NUMBER()->getText());
         stack.push(num);
     }
 
@@ -90,9 +94,17 @@ public:
     }
 
     void exitFunction(calcParser::FunctionContext *ctx) override {
-        // TODO: Check number of arguments
-        double val = stack.top();
-        stack.pop();
+        std::vector<double> args = {};
+        const size_t argCount = ctx->arg->expr().size(); 
+
+        for (size_t i = 0; i < argCount; i++)
+        {
+            args.push_back(stack.top());
+            stack.pop();
+        }
+
+        // We want args reversed
+        std::reverse(args.begin(), args.end());
 
         if (functions.find(ctx->fn->getText()) == functions.end()) {
             std::cerr << "ERROR: Unknown Function '" << ctx->fn->getText() << "'\n";
@@ -101,18 +113,48 @@ public:
 
         switch (functions.at(ctx->fn->getText())) {
         case Funcs::SIN: 
-            stack.push(std::sin(val));
+            stack.push(std::sin(args[0]));
             break;
         case Funcs::COS:
-            stack.push(std::cos(val));
+            stack.push(std::cos(args[0]));
             break;
         case Funcs::TAN:
-            stack.push(std::tan(val));
+            stack.push(std::tan(args[0]));
             break;
         case Funcs::SQRT:
-            stack.push(std::sqrt(val));
+            stack.push(std::sqrt(args[0]));
+            break;
+        case Funcs::HYPOT:
+            if (argCount == 2) {
+                double res = std::hypot(args[0], args[1]);
+                stack.push(res);
+            } else if (argCount == 3) {
+                double res = std::hypot(args[0], args[1], args[2]);
+                stack.push(res);
+            }
             break;
         }
+    }
+
+    void exitVariable(calcParser::VariableContext *ctx) override {
+        if (memory.find(ctx->var->getText()) == memory.end()) {
+            // TODO: Handle this better
+            stack.push(0);
+            return;
+        }
+
+        double val = memory[ctx->var->getText()];
+        stack.push(val);
+    }
+
+    void exitVariableAssignment(calcParser::VariableAssignmentContext *ctx) override {
+        double val = stack.top();
+        memory[ctx->var->getText()] = val;
+    }
+
+    void exitClear(calcParser::ClearContext *ctx) override {
+        memory.clear();
+        stack.push(0);
     }
 
     const std::vector<double>& getResults() const {
@@ -122,6 +164,7 @@ public:
 private:
     std::stack<double> stack;
     std::vector<double> results;
+    std::unordered_map<std::string, double> memory;
     std::unordered_map<std::string_view, Funcs> functions;
 };
 

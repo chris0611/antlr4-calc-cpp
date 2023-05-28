@@ -2,7 +2,7 @@ CXX := g++
 
 ANTLR4_DIR := /usr/local
 INC_DIRS := -I$(ANTLR4_DIR)/include/antlr4-runtime -Igenerated
-CXXFLAGS := -std=c++17 -O2 -march=native $(INC_DIRS) -Wall -Wpedantic -Wno-attributes
+CXXFLAGS := -std=c++17 -Og -ggdb $(INC_DIRS) -Wall -Wpedantic -Wno-attributes
 
 TARGET_EXEC := main	# name of final executable
 
